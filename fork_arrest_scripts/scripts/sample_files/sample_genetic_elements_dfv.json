@@ -1,0 +1,94 @@
+{
+	"comment": "file is for illustration purposes only. this is not real data",
+	"comment2": "dfv stands for dna features viewer, another package for visualization of genomic data",
+	"scale_factor": 0.5,
+	"img_width": 10,
+	"mapping_coordinates_1": [120, 140],
+	"mapping_coordinates_2": [165, 700],
+	"genomic_elements":[
+		{
+			"type": "reference_line",
+			"start": 120,
+			"stop": 160
+		},
+		{
+			"type": "gene",
+			"start": [120, 152],
+			"stop": [130, 154],
+			"modifier": "emphasize"
+		},
+		{
+			"type": "gene",
+			"start": 158,
+			"stop": 154,
+			"modifier": "de-emphasize"
+		},
+		{
+			"type": "fork_stall",
+			"position": 140,
+			"orientation": "left"
+		},
+		{
+			"type": "fork_stall",
+			"position": 145,
+			"orientation": "right",
+			"modifier": "de-emphasize",
+			"representation": "on_line"
+		},
+		{
+			"type": "origin",
+			"position": 120,
+			"modifier": "active"
+		},
+		{
+			"type": "origin",
+			"position": [132, 150],
+			"modifier": "inactive"
+		},
+		{
+			"type": "model_pause",
+			"position": [135, 137]
+		},
+		{
+			"type": "model_pause",
+			"position": 139,
+			"orientation": "left"
+		},
+		{
+			"type": "model_pause",
+			"import_from_bed": ["./sample_visualization.bed", "chr1:100-200"]
+		},
+		{
+			"type": "gene",
+			"import_from_bed": ["./sample_visualization_2.bed", "chr1:100-200"],
+			"modifier": "emphasize",
+			"representation": "displaced"
+		},
+		{
+			"type": "gene",
+			"start": 142,
+			"stop": 144,
+			"modifier": "de-emphasize",
+			"representation": "displaced"
+		},
+		{
+			"type": "gene",
+			"start": 149,
+			"stop": 148,
+			"modifier": "emphasize",
+			"representation": "displaced"
+		},
+		{
+			"type": "model_pause",
+			"position": 152,
+			"orientation": "left",
+			"modifier": "lead"
+		},
+		{
+			"type": "model_pause",
+			"position": 156,
+			"orientation": "left",
+			"modifier": "lag"
+		}
+	]
+}

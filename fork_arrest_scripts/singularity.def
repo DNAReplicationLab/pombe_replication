@@ -1,0 +1,242 @@
+BootStrap: yum
+OSVersion: 9
+MirrorURL: http://yum-repos.hpccluster/AlmaLinux/9/os/$basearch/
+Include: yum
+
+# Singularity definition file was created by ST using knowledge of similar singularity files
+# created internally by the NBI Research Computing team, so we acknowledge their work.
+
+# Some packages are not included in this definition file due to various reasons:
+# * deepTools not installed due to conflict with pycoQC. We used deepTools 3.5.1.
+# * guppy is proprietary. We primarily used Guppy 6.5.7 although this was largely done on-device
+#   (i.e. in the flowcell) and not in a computer, so the versions can vary.
+# * dnascent v2 can be installed from their github repo (https://github.com/MBoemo/DNAscent).
+#   we used DNAscent 2.0.2-76c5aca
+# * ucsc tools like liftOver and bigWigToBedgraph are not provided as
+#   they cannot be automatically downloaded and installed to the best of our knowledge.
+# * dorado and remora are for future-proofing and not needed for the current analysis.
+# * If you want to explore the dataset associated with the paper such as the modBAM files
+#   and detected pauses, it is expected that you will largely not need the packages above.
+#   (You need guppy and dnascent to go from fast5 currents to mod BAM files, but mod BAM files
+#    are already provided with the dataset associated with the paper.
+#    deepTools is used to make a figure in the SI and not in the
+#    main analysis scripts. UCSC tools are needed if you want to liftOver between genome
+#    assemblies or if you want to explore the CRAC dataset from Aiello et al.
+#    There are alternatives to liftOver available publicly on the internet.
+#    You can install all these tools missing from the def file here on your own if you want.)
+
+# It is up to the user to make sure their usage is consistent with the licenses
+# of the various software packages.
+
+# List of packages here:
+# python
+# samtools
+# seqtk
+# minimap2
+# bedtools
+# pycoQC
+# R
+# latex
+# imagemagick
+# miller
+# jq
+# modkit
+# paf2chain
+# bedops
+# seqkit
+
+%environment
+export PATH=/opt/software/samtools/bin:$PATH
+export PATH=/opt/software/minimap2/minimap2-2.24_x64-linux:$PATH
+export PATH=/opt/software/seqtk:$PATH
+export PATH=/opt/software/bedtools2/bin:$PATH
+export R_LIBS_USER=${HOME}/R/4.1.2/library
+export TEXLIVE_VERSION=2022
+export PATH=/usr/local/texlive/${TEXLIVE_VERSION}/bin/x86_64-linux:$PATH
+export CARGO_HOME=/opt/software/cargo_home
+export RUSTUP_HOME=/opt/software/rustup_home
+export PATH=$PATH:$CARGO_HOME/bin
+export PATH=$PATH:/opt/software/modkit/bin
+export PATH=$PATH:/opt/software/bedops/bin
+export PATH=$PATH:/opt/software
+
+%post
+# basics
+mkdir -p /opt/software
+cd /opt/software
+dnf -y update
+dnf -y install wget git tar xz gzip bzip2 which langpacks-en_GB.noarch findutils perl perl-Digest-MD5 vi
+
+# installation
+## Minimap2
+pwd=$(pwd)
+mkdir -p /opt/software/minimap2
+cd /opt/software/minimap2
+curl -L https://github.com/lh3/minimap2/releases/download/v2.24/minimap2-2.24_x64-linux.tar.bz2 | tar -jxvf -
+cd $pwd
+
+## install jq
+dnf -y install jq
+
+## Samtools
+cd /opt/software
+dnf -y groupinstall "Development Tools"
+dnf -y install ncurses-devel bzip2-devel
+wget https://github.com/samtools/samtools/releases/download/1.21/samtools-1.21.tar.bz2
+tar xvf samtools-1.21.tar.bz2
+rm -rf samtools-1.21.tar.bz2
+cd samtools-1.21
+./configure --prefix=/opt/software/samtools/
+make
+make install
+export PATH=/opt/software/samtools/bin:$PATH
+cd ..
+rm -rf samtools-1.21
+cd /opt/software/
+
+## R
+dnf -y install epel-release
+dnf config-manager --set-enabled crb
+develInstalls="readline-devel zlib-devel libX11-devel libX11 libXt-devel libXt bzip2-devel xz-devel \
+                pcre2-devel libcurl-devel libxml2-devel mesa-libGL mesa-libGL-devel mesa-libGLU \
+                mesa-libGLU-devel libpng-devel freetype-devel libjpeg-devel openssl-devel \
+                cairo-devel harfbuzz-devel fribidi-devel libtiff-devel libstdc++-static glibc-static"
+dnf -y install openblas-devel librsvg2-devel libcurl which texlive-xcolor ${develInstalls}
+export R_VERSION=4.1.2
+curl -O https://cdn.rstudio.com/r/rhel-9/pkgs/R-${R_VERSION}-1-1.x86_64.rpm
+dnf -y install R-${R_VERSION}-1-1.x86_64.rpm
+rm -rf R-${R_VERSION}-1-1.x86_64.rpm
+ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R
+ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/local/bin/Rscript
+dnf -y install openssl-devel libxml2-devel
+for k in ggplot2 hexbin devtools rsvg RIdeogram ggthemes patchwork svglite viridis tidyverse jsonlite; do
+    R -e "install.packages('"$k"', repos=\"https://cran.rstudio.com/\", dependencies=TRUE)"
+done
+R -e "library(devtools);devtools::install_github(\"davidsjoberg/ggsankey\")"
+
+## python
+dnf -y install gcc libffi-devel
+pwd=$(pwd)
+cd /opt/software
+wget https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz
+tar xzf Python-3.10.2.tgz
+rm -rf Python-3.10.2.tgz
+cd Python-3.10.2/
+./configure --enable-optimizations
+make
+make altinstall
+cd ..
+rm -rf Python-3.10.2
+cd $(pwd)
+
+# Python packages
+python3.10 -m pip install h5py numpy scikit-learn scipy tensorflow pandas \
+  pysam probability clize csvkit tensorflow-probability tf-keras \
+  scikit-image drawSvg regex
+pwd=$(pwd)
+cd /tmp
+git clone https://github.com/sathish-t/DnaFeaturesViewer.git
+cd DnaFeaturesViewer/
+python3.10 setup.py install
+cd ..
+rm -rf DnaFeaturesViewer
+cd $pwd
+
+## pycoQC
+python3.10 -m pip install pycoQC==2.5.2
+
+## bedtools
+pwd=$(pwd)
+cd /opt/software
+wget https://github.com/arq5x/bedtools2/releases/download/v2.29.2/bedtools-2.29.2.tar.gz
+tar -zxvf bedtools-2.29.2.tar.gz
+cd bedtools2
+make
+cd ..
+rm bedtools-2.29.2.tar.gz
+cd $pwd
+
+## seqtk
+pwd=$(pwd)
+mkdir -p /opt/software
+cd /opt/software
+git clone https://github.com/lh3/seqtk.git;
+cd seqtk; make
+cd $pwd
+
+## latex and pdflatex
+pwd=$(pwd)
+cd /opt/software
+export TEXLIVE_VERSION=2022
+wget ftp://tug.org/historic/systems/texlive/${TEXLIVE_VERSION}/tlnet-final/install-tl-unx.tar.gz
+zcat < install-tl-unx.tar.gz | tar xf -
+cd install-tl-2*
+# --repository allows installation of specific historical version
+perl ./install-tl --no-doc-install --no-src-install --scheme=small --no-interaction --repository \
+  ftp://tug.org/historic/systems/texlive/${TEXLIVE_VERSION}/tlnet-final
+tlmgr install latexmk
+tlmgr install standalone
+cd $pwd
+
+## Imagemagick
+dnf -y install ImageMagick ImageMagick-devel
+
+## Miller
+pwd=$(pwd)
+cd /opt/software
+vers=6.4.0
+package=miller-${vers}-linux-amd64.rpm
+wget https://github.com/johnkerl/miller/releases/download/v${vers}/${package}
+dnf -y install ${package}
+rm -rf ${package}
+cd $pwd
+
+## modkit
+export CARGO_HOME=/opt/software/cargo_home
+export RUSTUP_HOME=/opt/software/rustup_home
+export PATH=$PATH:$CARGO_HOME/bin
+export PATH=$PATH:/opt/software/modkit/bin
+mkdir -p /opt/software/modkit_src
+mkdir -p /opt/software/modkit
+mkdir -p $CARGO_HOME
+mkdir -p $RUSTUP_HOME
+
+RUSTUP_HOME=$RUSTUP_HOME CARGO_HOME=$CARGO_HOME bash -c 'curl https://sh.rustup.rs -sSf | sh -s -- -y'
+
+source "$CARGO_HOME/env"
+
+rustup install stable
+rustup default stable
+
+pwd=$(pwd)
+git clone https://github.com/nanoporetech/modkit.git /opt/software/modkit_src
+cd /opt/software/modkit_src
+git checkout cec0a0bbb7c6bc7ef192239e7b69790f6924f122
+cd $pwd
+cargo install --path /opt/software/modkit_src --root /opt/software/modkit
+rm -rf /opt/software/modkit_src
+
+## paf2chain
+git clone https://github.com/AndreaGuarracino/paf2chain /opt/software/paf2chain
+current_dir=$(pwd)
+cd /opt/software/paf2chain
+git checkout 7461db5
+cargo install --force --path .
+cd $current_dir
+
+## bedops
+cd /opt/software
+git clone https://github.com/bedops/bedops.git
+cd bedops
+git checkout f8e14ed
+make
+make install
+
+## seqkit
+cd /opt/software
+wget https://github.com/shenwei356/seqkit/releases/download/v2.8.2/seqkit_linux_amd64.tar.gz
+tar zxvf seqkit_linux_amd64.tar.gz
+rm -rf seqkit_linux_amd64.tar.gz
+
+# cleanup
+# no clean up for now

@@ -1,0 +1,21 @@
+put '$rel_dir=gsub(gsub($relative_direction,"co-directional","cd"),"head-on","ho");'
+then reshape -s desc,value \
+then rename -r '.*ratio_fork_overlap_length_to_fork_length$,expected',\
+'.*ratio_fork_overlap_length_to_fork_length_th_sd$,sd',\
+'.*ratio_sens_region_to_total_pauses$,expected_sens',\
+'.*ratio_sens_region_to_total_pauses_sd$,expected_sens_sd',\
+'.*ratio_pause_region_to_total_pauses$,observed',\
+'.*total_merged_roi_length_fraction_genome_halved_if_need_be$,coverage',\
+'.*total_merged_roi_length_fraction_genome_halved_if_need_be_sd$,coverage_sd',\
+'.*sd_null_hypothesis_for_uniform_T$,coverage_T_sd',\
+'.*null_hypothesis_for_uniform_T$,coverage_T',\
+'.*mean_duration$,mean_duration',\
+'.*sd_duration$,sd_duration',\
+'.*n_pauses_roi$,n_pauses_roi'
+then put 'cols=["expected", "expected_sens", "coverage", "coverage_T", "expected_sens_sd", "sd", "coverage_sd", "coverage_T_sd", "observed"];
+          for (e in cols){
+              if(! is_null($[e])){$[e] = 10000 * $[e]};
+          }'
+then cut -f division,dataset,feature,analysis_label,relative_direction,\
+expected,expected_sens,observed,coverage,coverage_T,sd,expected_sens_sd,coverage_sd,coverage_T_sd,\
+mean_duration,sd_duration,n_pauses_roi

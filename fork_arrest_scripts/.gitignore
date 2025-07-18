@@ -1,0 +1,13 @@
+scratch/*
+__pycache__/*
+investigate*
+ignore*
+*Rhistory*
+config.sh
+config.py
+config.R
+pysam.py
+*.out
+*.err
+*.rds
+.idea
