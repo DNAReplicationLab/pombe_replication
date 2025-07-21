@@ -2,9 +2,9 @@
 ---
 ## About the repository
 
-This repository contains the scripts used for data analysis and plotting in the fission yeast replication dynamics manuscript "Single-molecule sequencing maps replication dynamics across the fission yeast genome, including centromeres". 
+This repository contains the scripts used for data analysis and plotting in the fission yeast replication dynamics manuscript [Single-molecule sequencing maps replication dynamics across the fission yeast genome, including centromeres](https://www.biorxiv.org/content/10.1101/2025.07.16.665067v1). 
 
-mod.bam and text files (i.e., initiation sites, termination sites, pause sites, leftward fork ratio, reference genome sequences, annotations, replication timing data) are available from the Zenodo repository under the DOI [10.5281/zenodo.15365203].
+mod.bam and text files (i.e., initiation sites, termination sites, pause sites, leftward fork ratio, reference genome sequences, annotations, replication timing data) are available from the Zenodo repository under the DOI 10.5281/zenodo.15365203.
 
 
 - Instructions, scripts and model used to detect BrdU in nanopore reads, and to call replication dynamics (initiation, termination, fork directionalities and pauses) are in the repository [fork_arrest](https://github.com/DNAReplicationLab/fork_arrest).
